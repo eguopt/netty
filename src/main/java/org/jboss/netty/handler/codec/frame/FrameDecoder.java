@@ -412,11 +412,14 @@ public abstract class FrameDecoder extends SimpleChannelUpstreamHandler implemen
         ChannelPipeline pipeline = ctx.getPipeline();
         pipeline.addAfter(ctx.getName(), handlerName, handler);
                 
-        if (cumulation != null) {
-            Channels.fireMessageReceived(ctx, cumulation.readBytes(actualReadableBytes()));
+        try {
+            if (cumulation != null) {
+                Channels.fireMessageReceived(ctx, cumulation.readBytes(actualReadableBytes()));
+            }
+        } finally {
+            pipeline.remove(this);
         }
         
-        pipeline.remove(this);
     }
     
     /**
