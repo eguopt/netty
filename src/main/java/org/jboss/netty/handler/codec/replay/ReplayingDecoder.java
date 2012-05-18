@@ -400,7 +400,7 @@ public abstract class ReplayingDecoder<T extends Enum<T>>
     @Override
     protected final Object decodeLast(
             ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        return decode(ctx, channel, buffer, state);
+        return decodeLast(ctx, channel, buffer, state);
     }
 
     @Override
