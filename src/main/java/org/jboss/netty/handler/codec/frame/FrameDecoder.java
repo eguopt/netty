@@ -410,11 +410,13 @@ public abstract class FrameDecoder extends SimpleChannelUpstreamHandler implemen
             throw new IllegalStateException("Replace cann only be called once the FrameDecoder is added to the ChannelPipeline");
         }
         ChannelPipeline pipeline = ctx.getPipeline();
-        pipeline.replace(this, handlerName, handler);
-        
+        pipeline.addAfter(ctx.getName(), handlerName, handler);
+                
         if (cumulation != null) {
             Channels.fireMessageReceived(ctx, cumulation.readBytes(actualReadableBytes()));
         }
+        
+        pipeline.remove(this);
     }
     
     /**
