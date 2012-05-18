@@ -28,6 +28,7 @@ import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.LifeCycleAwareChannelHandler;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
@@ -174,10 +175,11 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  *
  * @apiviz.landmark
  */
-public abstract class FrameDecoder extends SimpleChannelUpstreamHandler {
+public abstract class FrameDecoder extends SimpleChannelUpstreamHandler implements LifeCycleAwareChannelHandler {
 
     private final boolean unfold;
     protected ChannelBuffer cumulation;
+    private volatile ChannelHandlerContext ctx;
 
     protected FrameDecoder() {
         this(false);
@@ -403,12 +405,15 @@ public abstract class FrameDecoder extends SimpleChannelUpstreamHandler {
      * as replacement
      * 
      */
-    public void replace(Channel channel, String handlerName, ChannelHandler handler) {
-        ChannelPipeline pipeline = channel.getPipeline();
+    public void replace(String handlerName, ChannelHandler handler) {
+        if (ctx == null) {
+            throw new IllegalStateException("Replace cann only be called once the FrameDecoder is added to the ChannelPipeline");
+        }
+        ChannelPipeline pipeline = ctx.getPipeline();
         pipeline.replace(this, handlerName, handler);
         
         if (cumulation != null) {
-            Channels.fireMessageReceived(pipeline.getContext(handler), cumulation.readBytes(actualReadableBytes()));
+            Channels.fireMessageReceived(ctx, cumulation.readBytes(actualReadableBytes()));
         }
     }
     
@@ -435,6 +440,25 @@ public abstract class FrameDecoder extends SimpleChannelUpstreamHandler {
             return ChannelBuffers.EMPTY_BUFFER;
         }
         return buf;
+    }
+
+    public void beforeAdd(ChannelHandlerContext ctx) throws Exception {
+        this.ctx = ctx;
+    }
+
+    public void afterAdd(ChannelHandlerContext ctx) throws Exception {
+        // Nothing to do..
+        
+    }
+
+    public void beforeRemove(ChannelHandlerContext ctx) throws Exception {
+        // Nothing to do..
+        
+    }
+
+    public void afterRemove(ChannelHandlerContext ctx) throws Exception {
+        // Nothing to do..
+        
     }
 
 }
