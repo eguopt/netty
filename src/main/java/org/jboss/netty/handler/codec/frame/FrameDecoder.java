@@ -406,7 +406,10 @@ public abstract class FrameDecoder extends SimpleChannelUpstreamHandler {
     public void replace(Channel channel, String handlerName, ChannelHandler handler) {
         ChannelPipeline pipeline = channel.getPipeline();
         pipeline.replace(this, handlerName, handler);
-        Channels.fireMessageReceived(pipeline.getContext(handler), cumulation.readBytes(actualReadableBytes()));
+        
+        if (cumulation != null) {
+            Channels.fireMessageReceived(pipeline.getContext(handler), cumulation.readBytes(actualReadableBytes()));
+        }
     }
     
     /**
