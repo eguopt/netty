@@ -649,4 +649,16 @@ public abstract class ReplayingDecoder<T extends Enum<T>>
         ChannelBufferFactory factory = ctx.getChannel().getConfig().getBufferFactory();
         return factory.getBuffer(Math.max(minimumCapacity, 256));
     }
+    
+    /**
+     * Replace this {@link ReplayingDecoder} in the {@link ChannelPipeline} with the given {@link ChannelHandler}. All 
+     * remaining bytes in the {@link ChannelBuffer} will get send to the new {@link ChannelHandler} that was used
+     * as replacement
+     * 
+     */
+    public void replace(Channel channel, String handlerName, ChannelHandler handler) {
+        ChannelPipeline pipeline = channel.getPipeline();
+        pipeline.replace(this, handlerName, handler);
+        Channels.fireMessageReceived(pipeline.getContext(handler), cumulation.readBytes(actualReadableBytes()));
+    }
 }
